@@ -1,4 +1,4 @@
-# colossus
+# cyclecloud-colossus
 Multinode CycleCloud cluster templates
 
 These templates are functioning examples for multi-node heterogeneous clusters (eg: mixed Intel/AMD/NVIDIA node types), which allow you to submit jobs to different queues ("nodearrays" in Cycle language), and have Cyclecloud autoscale the nodearrays for you. 

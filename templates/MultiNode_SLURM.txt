@@ -1,0 +1,415 @@
+[cluster COLOSSUS_SLURM]
+FormLayout = selectionpanel
+Category = Pilot 
+CategoryOrder=1
+IconUrl = https://www.akita.co.uk/computing-history/img/pre1950.png
+Autoscale = $Autoscale
+
+    [[node defaults]]
+    UsePublicNetwork = $UsePublicNetwork
+    Credentials = $Credentials
+    ImageName = $MasterImageName
+    SubnetId = $SubnetId
+    Region = $Region
+    KeyPairLocation = ~/.ssh/cyclecloud.pem
+	
+	[[[configuration]]]
+        cyclecloud.selinux.policy=permissive
+	cshared.server.legacy_links_disabled = true
+        cyclecloud.mounts.shared.disabled = true
+        cyclecloud.exports.shared.disabled = true
+        #cyclecloud.mounts.sched.disabled = true
+        #cyclecloud.exports.sched.disabled = true
+        cyclecloud.exports.shared.samba.enabled = false
+        cyclecloud.exports.defaults.samba.enabled = false
+
+        slurm.version = $configuration_slurm_version
+
+        ## *** MK>: Now using default timers until further notice: ***
+        #-- minutes
+	#[[[configuration cyclecloud]]]
+	##autoscale.forced_shutdown_timeout = 5
+	#-- seconds 
+	#[[[configuration cyclecloud.cluster]]]
+        # -- seconds
+        # defaults for PBS:
+        # default[:cyclecloud][:cluster][:autoscale][:idle_time_before_jobs] = 3600
+        # default[:cyclecloud][:cluster][:autoscale][:idle_time_after_jobs] = 300
+        # 
+        # This parameter causes total chaos at 30 seconds as nodes go down before
+        # their peers in the same group before the same job has completed
+	#autoscale.idle_time_before_jobs = 30 #-- causes chaos
+        # Perhaps change this from default 3600 to 300
+	#autoscale.idle_time_before_jobs = 300
+        # -- seconds
+	#autoscale.idle_time_after_jobs = 120
+
+        [[[cluster-init cyclecloud/slurm:default:2.0.2]]]
+        [[[cluster-init aad:default:1.0.0]]]
+        Optional = true
+
+        [[[configuration cyclecloud.mounts.anf_shared]]]
+        type = nfs
+        mountpoint = /shared
+        export_path = $ANFSharedExport
+	options = defaults,rw,hard,rsize=65536,wsize=65536,vers=3,tcp
+	address = $ANFServerName
+
+	[[[configuration cyclecloud.mounts.scratch]]]
+        type = nfs
+        mountpoint = $ANFScratchMountPoint
+        export_path = $ANFScratchExport
+	options = defaults,rw,hard,rsize=65536,wsize=65536,vers=3,tcp
+        address = $ANFServerName
+
+    [[node master]]
+    MachineType = $MasterMachineType
+    IsReturnProxy = $ReturnProxy
+    AdditionalClusterInitSpecs = $MasterClusterInitSpecs
+
+        [[[configuration]]]
+        [[[cluster-init cyclecloud/slurm:master:2.0.2]]]
+        [[[cluster-init colossus:default:1.0.0]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $UsePublicNetwork
+
+        [[[input-endpoint ganglia]]]
+        PrivatePort = 8652
+        PublicPort = 8652
+
+    #-- HPC Machine Type 1 HC44rs (Default)
+    [[nodearray HC44]]
+    ImageName = $HPC1ImageName
+    MachineType = Standard_HC44rs
+    MaxCoreCount = $MaxHPC1CoreCount
+    Azure.MaxScalesetSize = 300
+
+    Interruptible = $HPC1LowPri
+    AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
+
+        [[[configuration]]]
+        slurm.autoscale = true
+        slurm.default_partition = true
+        slurm.hpc = true
+        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+        [[[cluster-init colossus:execute:1.0.0]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic                                             
+
+    #-- HPC Machine Type 2 HB60rs
+    [[nodearray HB60]]
+    ImageName = $HPC2ImageName
+    MachineType = Standard_HB60rs
+    MaxCoreCount = $MaxHPC2CoreCount
+    Azure.MaxScalesetSize = 300
+
+    Interruptible = $HPC2LowPri
+    AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
+
+        [[[configuration]]]
+        slurm.autoscale = true
+        slurm.hpc = true
+        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+        [[[cluster-init colossus:execute:1.0.0]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic             
+
+    #-- GPU Machine Type 1 NC24rs_v2
+    [[nodearray GPUV1]]
+    ImageName = $GPU1ImageName
+    MachineType = Standard_NC24rs_v2
+    MaxCoreCount = $MaxGPU1CoreCount
+    Azure.MaxScalesetSize = 300
+
+    Interruptible = $GPU1LowPri
+    AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
+
+        [[[configuration]]]
+        slurm.autoscale = true
+        slurm.hpc = false
+        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+        [[[cluster-init colossus:execute:1.0.0]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic
+
+    #-- GPU Machine Type 2 NC24rs_v3
+    [[nodearray GPUV2]]
+    ImageName = $GPU2ImageName
+    MachineType = Standard_NC24rs_v3
+    MaxCoreCount = $MaxGPU2CoreCount
+    Azure.MaxScalesetSize = 300
+
+    Interruptible = $GPU2LowPri
+    AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs                                          
+        [[[configuration]]]
+        slurm.autoscale = true
+        slurm.hpc = false
+        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+        [[[cluster-init colossus:execute:1.0.0]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic
+
+[parameters About]
+Order = 1
+
+    [[parameter AboutTheColossusCluster ]]
+    Description = "This cluster is set up to use the pbspro scheduler"
+    HideLabel = true
+    Config.Plugin = pico.widget.HtmlTemplateWidget
+    Config.Template := "<table><tr><td><img src='https://www.akita.co.uk/computing-history/img/pre1950.png' width='434' height='165'></td></tr><tr><td><p>This template is maintained by Microsoft.</p><p>Follow the instructions in the <a href=\"https://github.com/azure/cyclecloud-slurm/\" target=\"_blank\">README</a> for details on instructions on extending and configuring the Project for your environment.</p></td></tr></table>"
+
+[parameters Required Settings]
+Order = 10
+
+    [[parameters Virtual Machines ]]
+    Description = "The cluster, in this case, has two roles: the scheduler master-node with shared filer and the execute hosts. Configure which VM types to use based on the requirements of your application."
+    Order = 20
+
+        [[[parameter Region]]]
+        Label = Region
+        Description = Deployment Location
+        ParameterType = Cloud.Region
+        DefaultValue = westeurope
+
+        [[[parameter MasterMachineType]]]
+        Label = Master VM Type
+        Description = The VM type for scheduler master and shared filer.
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_D12_v2
+
+        [[[parameter HPCMachineType1]]]
+        Label = HPC1 VM Type
+        Description = The VM type for HPC execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_HC44rs
+
+        [[[parameter HPCMachineType2]]]
+        Label = HPC2 VM Type
+        Description = The VM type for HPC execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_HB60rs
+
+        [[[parameter GPUMachineType1]]]
+        Label = GPU1 VM Type
+        Description = The VM type for GPU execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_NC24rs_v2
+
+        [[[parameter GPUMachineType2]]]
+        Label = GPU2 VM Type
+        Description = The VM type for GPU execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_NC24rs_v3
+
+    [[parameters Auto-Scaling]]
+    Description = "The cluster can autoscale to the workload, adding execute hosts as jobs are queued. To enable this check the box below and choose the initial and maximum core counts for the cluster"
+    Order = 30
+
+        [[[parameter Autoscale]]]
+        Label = Autoscale
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Start and stop execute instances automatically
+
+        [[[parameter MaxHPC1CoreCount]]]
+        Label = HPC1 Max Cores
+        Description = The total number of HPC execute cores to start
+        DefaultValue = 10000 
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.IntegerOnly = true
+
+        [[[parameter MaxHPC2CoreCount]]]
+        Label = HPC2 Max Cores
+        Description = The total number of HPC execute cores to start
+        DefaultValue = 10000
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.IntegerOnly = true
+
+        [[[parameter MaxGPU1CoreCount]]]
+        Label = GPU1 Max Cores
+        Description = The total number of GPU execute cores to start
+        DefaultValue = 240
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.IntegerOnly = true
+
+        [[[parameter MaxGPU2CoreCount]]]
+        Label = GPU1 Max Cores
+        Description = The total number of GPU execute cores to start
+        DefaultValue = 240
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.IntegerOnly = true
+
+        [[[parameter HPC1LowPri]]]
+        Label = HPC1 Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for all execute hosts
+
+        [[[parameter HPC2LowPri]]]
+        Label = HPC2 Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for all execute hosts
+
+        [[[parameter GPU1LowPri]]]
+        Label = GPU1 Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for all execute hosts
+
+        [[[parameter GPU2LowPri]]]
+        Label = GPU2 Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for all execute hosts
+
+    [[parameters Networking]]
+    Description = "This is the subnet in which to run all the execute hosts"
+    Order = 20
+
+        [[[parameter SubnetId]]]
+        Label = Subnet ID
+        Description = Subnet Resource Path (ResourceGroup/VirtualNetwork/Subnet)
+        ParameterType = Azure.Subnet
+        Required = True
+
+[parameters Advanced Settings]
+Order = 20
+
+    [[parameters Azure Settings]]
+    Order = 10
+
+        [[[parameter Credentials]]]
+        Description = The credentials for the cloud provider
+        ParameterType = Cloud.Credentials
+
+    [[parameters Software]]
+    Description = "Specify the scheduling software, and base OS installed on all nodes, and optionally the cluster-init and chef versions from your Locker."
+    Order = 10                                                                                                                         
+        [[[parameter MasterImageName]]]
+        Label = Master Node OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+
+        [[[parameter HPC1ImageName]]]
+        Label = HPC Node Type1 OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+
+        [[[parameter HPC2ImageName]]]
+        Label = HPC Node Type2 OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+
+        [[[parameter GPU1ImageName]]]
+        Label = GPU Node Type1 OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+
+        [[[parameter GPU2ImageName]]]
+        Label = GPU Node Type2 OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+
+        [[[parameter MasterClusterInitSpecs]]]
+        Label = Master Cluster-Init
+        DefaultValue = =undefined
+        Description = Cluster init specs to apply to the master node
+        ParameterType = Cloud.ClusterInitSpecs
+
+        [[[parameter ExecuteClusterInitSpecs]]]
+        Label = Execute Cluster-Init
+        DefaultValue = =undefined
+        Description = Cluster init specs to apply to execute nodes
+        ParameterType = Cloud.ClusterInitSpecs
+
+    [[parameters Slurm Settings ]]
+    Description = "Section for configuring Slurm"
+    Order = 5
+
+        [[[parameter configuration_slurm_version]]]
+        required = True
+        label = Slurm Version
+        description = Version of Slurm to install on the cluster
+        defaultvalue = 18.08.7-1
+
+    [[parameters Advanced Networking]]
+    Description = Advanced networking settings
+
+        [[[parameter ReturnProxy]]]
+        Label = Return Proxy
+        DefaultValue = true
+        ParameterType = Boolean
+        Config.Label = Use SSH tunnel to connect to CycleCloud (required if direct access is blocked)
+        [[[parameter UsePublicNetwork]]]
+        Label = Public Head Node
+        DefaultValue = true
+        ParameterType = Boolean
+        Config.Label = Access master node from the Internet
+
+        [[[parameter ExecuteNodesPublic]]]
+        Label = Public Execute
+        DefaultValue = false
+        ParameterType = Boolean
+        Config.Label = Access execute nodes from the Internet
+        Conditions.Excluded := UsePublicNetwork isnt true
+
+[parameters External Filesystems]
+Order = 30
+
+    [[parameters ANF Settings]]
+    Order = 28
+    Description = "Use a ANF server as a NAS. Settings for defining the ANF"
+
+        [[[parameter ANFServerName]]]
+        Label = ANF Server name or IP address
+        Description = The ANF server name or ip address.
+        DefaultValue = 10.5.1.5
+        Required = True
+
+	[[[parameters Scratch FS]]]
+	Order = 28
+	Description = "Configure the Scratch filesystem (by default (for performance), it is a subdirectory on the /shared filesystem)"
+
+	    [[[[parameter ANFScratchExport]]]]
+	    Label = Scratch Export
+	    Description = The Scratch space export on the ANF.
+	    DefaultValue = /scratch
+	    Required = True
+
+            [[[parameter ANFScratchMountPoint]]]
+            Label = ANF Export
+            Description = The export on the ANF.
+            DefaultValue = /scratch
+            Required = True
+
+	[[[parameters Shared FS]]]
+	Order = 28
+	Description = "Configure the /shared filesystem.  This is the Home filesystem and general purpose shared space. (Mountpoint is hard-code to /shared since user Home directories must exist at /shared/home )"
+
+	    # NOTE: /shared is the required/hard-coded mountput since the home directory is at /shared/home
+	    [[[[parameter ANFSharedExport]]]]
+	    Label = Shared Export
+	    Description = The Shared and Home directory export on the ANF.
+	    DefaultValue = /shared
+	    Required = True
+
+            [[[parameter ANFSharedMountPoint]]]
+            Label = ANF Shared Home Export
+            Description = The /shared/home export on the ANF.
+            DefaultValue = /shared
+            Required = True
