@@ -14,7 +14,7 @@ module load mpi/impi_2018.4.274
 cd $PBS_O_WORKDIR
 mpirun -genv I_MPI_FABRICS=shm:ofa -genv I_MPI_FALLBACK_DEVICE=0 IMB-MPI1
 ```
-### Example SLURM Job: 
+## Example SLURM Job: 
 
 Use "--partition=HC44" or "--partition=HB60" 
 ```
