@@ -1,4 +1,4 @@
-[cluster COLOSSUS_SLURM]
+[cluster COLOSSUS_PBS]
 FormLayout = selectionpanel
 Category = Pilot 
 CategoryOrder=1
@@ -14,16 +14,13 @@ Autoscale = $Autoscale
     KeyPairLocation = ~/.ssh/cyclecloud.pem
 	
 	[[[configuration]]]
-        cyclecloud.selinux.policy=permissive
 	cshared.server.legacy_links_disabled = true
         cyclecloud.mounts.shared.disabled = true
+        cyclecloud.mounts.sched.disabled = true
         cyclecloud.exports.shared.disabled = true
-        #cyclecloud.mounts.sched.disabled = true
-        #cyclecloud.exports.sched.disabled = true
+        cyclecloud.exports.sched.disabled = true
         cyclecloud.exports.shared.samba.enabled = false
         cyclecloud.exports.defaults.samba.enabled = false
-
-        slurm.version = $configuration_slurm_version
 
         ## *** MK>: Now using default timers until further notice: ***
         #-- minutes
@@ -39,14 +36,10 @@ Autoscale = $Autoscale
         # This parameter causes total chaos at 30 seconds as nodes go down before
         # their peers in the same group before the same job has completed
 	#autoscale.idle_time_before_jobs = 30 #-- causes chaos
-        # Perhaps change this from default 3600 to 300
+        # Perhaps change this from default 3600 to 300 
 	#autoscale.idle_time_before_jobs = 300
         # -- seconds
-	#autoscale.idle_time_after_jobs = 120
-
-        [[[cluster-init cyclecloud/slurm:default:2.0.2]]]
-        [[[cluster-init aad:default:1.0.0]]]
-        Optional = true
+	#autoscale.idle_time_after_jobs = 30
 
         [[[configuration cyclecloud.mounts.anf_shared]]]
         type = nfs
@@ -61,7 +54,7 @@ Autoscale = $Autoscale
     AdditionalClusterInitSpecs = $MasterClusterInitSpecs
 
         [[[configuration]]]
-        [[[cluster-init cyclecloud/slurm:master:2.0.2]]]
+        [[[cluster-init cyclecloud/pbspro:master]]]
         [[[cluster-init colossus:default:1.0.0]]]
 
         [[[network-interface eth0]]]
@@ -82,10 +75,8 @@ Autoscale = $Autoscale
     AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
 
         [[[configuration]]]
-        slurm.autoscale = true
-        slurm.default_partition = true
-        slurm.hpc = true
-        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+
+        [[[cluster-init cyclecloud/pbspro:execute]]]
         [[[cluster-init colossus:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
@@ -102,9 +93,26 @@ Autoscale = $Autoscale
     AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
 
         [[[configuration]]]
-        slurm.autoscale = true
-        slurm.hpc = true
-        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+
+        [[[cluster-init cyclecloud/pbspro:execute]]]
+        [[[cluster-init colossus:execute:1.0.0]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic             
+
+    #-- HPC Machine Type 3 HB120rs
+    [[nodearray HB120]]
+    ImageName = $HPC3ImageName
+    MachineType = Standard_HB120rs
+    MaxCoreCount = $MaxHPC3CoreCount
+    Azure.MaxScalesetSize = 300
+
+    Interruptible = $HPC3LowPri
+    AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
+
+        [[[configuration]]]
+
+        [[[cluster-init cyclecloud/pbspro:execute]]]
         [[[cluster-init colossus:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
@@ -121,16 +129,15 @@ Autoscale = $Autoscale
     AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
 
         [[[configuration]]]
-        slurm.autoscale = true
-        slurm.hpc = false
-        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+
+        [[[cluster-init cyclecloud/pbspro:execute]]]
         [[[cluster-init colossus:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic
 
-    #-- GPU Machine Type 2 NC24rs_v3
-    [[nodearray GPUV2]]
+   #-- GPU Machine Type 2 NC24rs_v3
+   [[nodearray GPUV2]]
     ImageName = $GPU2ImageName
     MachineType = Standard_NC24rs_v3
     MaxCoreCount = $MaxGPU2CoreCount
@@ -138,10 +145,10 @@ Autoscale = $Autoscale
 
     Interruptible = $GPU2LowPri
     AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs                                          
+
         [[[configuration]]]
-        slurm.autoscale = true
-        slurm.hpc = false
-        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+
+        [[[cluster-init cyclecloud/pbspro:execute]]]
         [[[cluster-init colossus:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
@@ -150,7 +157,7 @@ Autoscale = $Autoscale
 [parameters About]
 Order = 1
 
-    [[parameter AboutTheColossusCluster ]]
+    [[parameter AboutTheJMCluster ]]
     Description = "This cluster is set up to use the pbspro scheduler"
     HideLabel = true
     Config.Plugin = pico.widget.HtmlTemplateWidget
@@ -186,6 +193,12 @@ Order = 10
         Description = The VM type for HPC execute nodes
         ParameterType = Cloud.MachineType
         DefaultValue = Standard_HB60rs
+
+        [[[parameter HPCMachineType3]]]
+        Label = HPC3 VM Type
+        Description = The VM type for HPC execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_HB120rs
 
         [[[parameter GPUMachineType1]]]
         Label = GPU1 VM Type
@@ -225,6 +238,14 @@ Order = 10
         Config.MinValue = 0
         Config.IntegerOnly = true
 
+        [[[parameter MaxHPC3CoreCount]]]
+        Label = HPC3 Max Cores
+        Description = The total number of HPC execute cores to start
+        DefaultValue = 10000
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.IntegerOnly = true
+
         [[[parameter MaxGPU1CoreCount]]]
         Label = GPU1 Max Cores
         Description = The total number of GPU execute cores to start
@@ -249,6 +270,12 @@ Order = 10
 
         [[[parameter HPC2LowPri]]]
         Label = HPC2 Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for all execute hosts
+
+        [[[parameter HPC3LowPri]]]
+        Label = HPC3 Low Priority
         DefaultValue = true
         Widget.Plugin = pico.form.BooleanCheckBox
         Widget.Label = Use low priority instances for all execute hosts
@@ -306,6 +333,12 @@ Order = 20
         Config.OS = linux
         DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
 
+        [[[parameter HPC3ImageName]]]
+        Label = HPC Node Type3 OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+
         [[[parameter GPU1ImageName]]]
         Label = GPU Node Type1 OS
         ParameterType = Cloud.Image
@@ -330,16 +363,6 @@ Order = 20
         Description = Cluster init specs to apply to execute nodes
         ParameterType = Cloud.ClusterInitSpecs
 
-    [[parameters Slurm Settings ]]
-    Description = "Section for configuring Slurm"
-    Order = 5
-
-        [[[parameter configuration_slurm_version]]]
-        required = True
-        label = Slurm Version
-        description = Version of Slurm to install on the cluster
-        defaultvalue = 18.08.7-1
-
     [[parameters Advanced Networking]]
     Description = Advanced networking settings
 
@@ -348,6 +371,7 @@ Order = 20
         DefaultValue = true
         ParameterType = Boolean
         Config.Label = Use SSH tunnel to connect to CycleCloud (required if direct access is blocked)
+
         [[[parameter UsePublicNetwork]]]
         Label = Public Head Node
         DefaultValue = true
@@ -361,28 +385,26 @@ Order = 20
         Config.Label = Access execute nodes from the Internet
         Conditions.Excluded := UsePublicNetwork isnt true
 
-# NOTE: /shared is the required/hard-coded mountput since the home directory is at /shared/home
-[parameters External Filesystems]
+# NOTE: /shared is the required/hard-coded mountput since the home directory is at /shared/home                           [parameters External Filesystems]
 Order = 30
 
     [[parameters Azure NetApp Files Settings]]
     Order = 28
     Description = "ANF Export & Mount Settings"
-
         [[[parameter ANFServerName]]]
         Label = ANF Server name or IP address
         Description = The ANF server name or ip address.
         DefaultValue = 10.5.1.5
         Required = True
 
-	[[[parameter ANFSharedExport]]]
-	Label = ANF Shared Home Export
-	Description = "Configure the /shared filesystem.  This is the Home filesystem and general purpose shared space. (Mountpoint is hard-code to /shared since user Home directories must exist at /shared/home )"
-	DefaultValue = /shared
-	Required = True
+        [[[parameter ANFSharedExport]]]
+        Label = ANF Shared Home Export
+        Description = "Configure the /shared filesystem.  This is the Home filesystem and general purpose shared space. (Mountpoint is hard-code to /shared since user Home directories must exist at /shared/home )"
+        DefaultValue = /shared
+        Required = True
 
         [[[parameter ANFSharedMountPoint]]]
-        Label = ANF Shared Home Mountpoint 
+        Label = ANF Shared Home Mountpoint
         Description = The /shared/home export on the ANF.
         DefaultValue = /shared
         Required = True

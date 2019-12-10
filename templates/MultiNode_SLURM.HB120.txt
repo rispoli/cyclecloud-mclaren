@@ -110,6 +110,25 @@ Autoscale = $Autoscale
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic             
 
+    #-- HPC Machine Type 3 HB120rs
+    [[nodearray HB120]]
+    ImageName = $HPC3ImageName
+    MachineType = Standard_HB120rs
+    MaxCoreCount = $MaxHPC3CoreCount
+    Azure.MaxScalesetSize = 300
+
+    Interruptible = $HPC3LowPri
+    AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
+
+        [[[configuration]]]
+        slurm.autoscale = true
+        slurm.hpc = true
+        [[[cluster-init cyclecloud/slurm:execute:2.0.2]]]
+        [[[cluster-init colossus:execute:1.0.0]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic             
+
     #-- GPU Machine Type 1 NC24rs_v2
     [[nodearray GPUV1]]
     ImageName = $GPU1ImageName
@@ -187,6 +206,12 @@ Order = 10
         ParameterType = Cloud.MachineType
         DefaultValue = Standard_HB60rs
 
+        [[[parameter HPCMachineType3]]]
+        Label = HPC3 VM Type
+        Description = The VM type for HPC execute nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_HB120rs
+
         [[[parameter GPUMachineType1]]]
         Label = GPU1 VM Type
         Description = The VM type for GPU execute nodes
@@ -225,6 +250,14 @@ Order = 10
         Config.MinValue = 0
         Config.IntegerOnly = true
 
+        [[[parameter MaxHPC3CoreCount]]]
+        Label = HPC2 Max Cores
+        Description = The total number of HPC execute cores to start
+        DefaultValue = 10000
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.IntegerOnly = true
+
         [[[parameter MaxGPU1CoreCount]]]
         Label = GPU1 Max Cores
         Description = The total number of GPU execute cores to start
@@ -249,6 +282,12 @@ Order = 10
 
         [[[parameter HPC2LowPri]]]
         Label = HPC2 Low Priority
+        DefaultValue = true
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Use low priority instances for all execute hosts
+
+        [[[parameter HPC3LowPri]]]
+        Label = HPC3 Low Priority
         DefaultValue = true
         Widget.Plugin = pico.form.BooleanCheckBox
         Widget.Label = Use low priority instances for all execute hosts
@@ -302,6 +341,12 @@ Order = 20
 
         [[[parameter HPC2ImageName]]]
         Label = HPC Node Type2 OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+
+        [[[parameter HPC3ImageName]]]
+        Label = HPC Node Type3 OS
         ParameterType = Cloud.Image
         Config.OS = linux
         DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
