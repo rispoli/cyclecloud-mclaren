@@ -1,8 +1,8 @@
-[cluster COLOSSUS_PBS]
+[cluster McLaren_PBS]
 FormLayout = selectionpanel
-Category = Pilot 
-CategoryOrder=1
-IconUrl = https://www.akita.co.uk/computing-history/img/pre1950.png
+Category = PoC
+CategoryOrder = 1
+IconUrl = https://formularapida.net/wp-content/uploads/2019/01/DxG7bOQXgAEul7l.jpg
 Autoscale = $Autoscale
 
     [[node defaults]]
@@ -22,25 +22,6 @@ Autoscale = $Autoscale
         cyclecloud.exports.shared.samba.enabled = false
         cyclecloud.exports.defaults.samba.enabled = false
 
-        ## *** MK>: Now using default timers until further notice: ***
-        #-- minutes
-	#[[[configuration cyclecloud]]]
-	##autoscale.forced_shutdown_timeout = 5
-	#-- seconds 
-	#[[[configuration cyclecloud.cluster]]]
-        # -- seconds
-        # defaults for PBS:
-        # default[:cyclecloud][:cluster][:autoscale][:idle_time_before_jobs] = 3600
-        # default[:cyclecloud][:cluster][:autoscale][:idle_time_after_jobs] = 300
-        # 
-        # This parameter causes total chaos at 30 seconds as nodes go down before
-        # their peers in the same group before the same job has completed
-	#autoscale.idle_time_before_jobs = 30 #-- causes chaos
-        # Perhaps change this from default 3600 to 300 
-	#autoscale.idle_time_before_jobs = 300
-        # -- seconds
-	#autoscale.idle_time_after_jobs = 30
-
         [[[configuration cyclecloud.mounts.anf_shared]]]
         type = nfs
         mountpoint = /shared
@@ -55,7 +36,7 @@ Autoscale = $Autoscale
 
         [[[configuration]]]
         [[[cluster-init cyclecloud/pbspro:master]]]
-        [[[cluster-init colossus:default:1.0.0]]]
+        [[[cluster-init mclaren:default:1.0.0]]]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $UsePublicNetwork
@@ -77,7 +58,7 @@ Autoscale = $Autoscale
         [[[configuration]]]
 
         [[[cluster-init cyclecloud/pbspro:execute]]]
-        [[[cluster-init colossus:execute:1.0.0]]]
+        [[[cluster-init mclaren:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic                                             
@@ -95,7 +76,7 @@ Autoscale = $Autoscale
         [[[configuration]]]
 
         [[[cluster-init cyclecloud/pbspro:execute]]]
-        [[[cluster-init colossus:execute:1.0.0]]]
+        [[[cluster-init mclaren:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic             
@@ -113,43 +94,25 @@ Autoscale = $Autoscale
         [[[configuration]]]
 
         [[[cluster-init cyclecloud/pbspro:execute]]]
-        [[[cluster-init colossus:execute:1.0.0]]]
+        [[[cluster-init mclaren:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic             
 
-    #-- GPU Machine Type 1 NC24rs_v2
-    [[nodearray GPUV1]]
-    ImageName = $GPU1ImageName
-    MachineType = Standard_NC24rs_v2
-    MaxCoreCount = $MaxGPU1CoreCount
+    #-- Compute Machine Type 1 D32a_v4
+    [[nodearray CMP1]]
+    ImageName = $Compute1ImageName
+    MachineType = Standard_D32a_v4
+    MaxCoreCount = $MaxCompute1CoreCount
     Azure.MaxScalesetSize = 300
 
-    Interruptible = $GPU1LowPri
+    Interruptible = $Compute1LowPri
     AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
 
         [[[configuration]]]
 
         [[[cluster-init cyclecloud/pbspro:execute]]]
-        [[[cluster-init colossus:execute:1.0.0]]]
-
-        [[[network-interface eth0]]]
-        AssociatePublicIpAddress = $ExecuteNodesPublic
-
-   #-- GPU Machine Type 2 NC24rs_v3
-   [[nodearray GPUV2]]
-    ImageName = $GPU2ImageName
-    MachineType = Standard_NC24rs_v3
-    MaxCoreCount = $MaxGPU2CoreCount
-    Azure.MaxScalesetSize = 300
-
-    Interruptible = $GPU2LowPri
-    AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs                                          
-
-        [[[configuration]]]
-
-        [[[cluster-init cyclecloud/pbspro:execute]]]
-        [[[cluster-init colossus:execute:1.0.0]]]
+        [[[cluster-init mclaren:execute:1.0.0]]]
 
         [[[network-interface eth0]]]
         AssociatePublicIpAddress = $ExecuteNodesPublic
@@ -157,16 +120,16 @@ Autoscale = $Autoscale
 [parameters About]
 Order = 1
 
-    [[parameter AboutTheJMCluster ]]
+    [[parameter AboutTheMcLarenCluster ]]
     Description = "This cluster is set up to use the pbspro scheduler"
     HideLabel = true
     Config.Plugin = pico.widget.HtmlTemplateWidget
-    Config.Template := "<table><tr><td><img src='https://www.akita.co.uk/computing-history/img/pre1950.png' width='434' height='165'></td></tr><tr><td><p>This template is maintained by Microsoft.</p><p>Follow the instructions in the <a href=\"https://github.com/azure/cyclecloud-slurm/\" target=\"_blank\">README</a> for details on instructions on extending and configuring the Project for your environment.</p></td></tr></table>"
+    Config.Template := "<table><tr><td><img src='https://formularapida.net/wp-content/uploads/2019/01/DxG7bOQXgAEul7l.jpg' width='434' height='165'></td></tr><tr><td><p>This template is maintained by Microsoft.</p><p>Follow the instructions in the <a href=\"https://github.com/azure/cyclecloud-pbspro/\" target=\"_blank\">README</a> for details on instructions on extending and configuring the Project for your environment.</p></td></tr></table>"
 
 [parameters Required Settings]
 Order = 10
 
-    [[parameters Virtual Machines ]]
+    [[parameters Virtual Machines]]
     Description = "The cluster, in this case, has two roles: the scheduler master-node with shared filer and the execute hosts. Configure which VM types to use based on the requirements of your application."
     Order = 20
 
@@ -200,17 +163,11 @@ Order = 10
         ParameterType = Cloud.MachineType
         DefaultValue = Standard_HB120rs
 
-        [[[parameter GPUMachineType1]]]
-        Label = GPU1 VM Type
-        Description = The VM type for GPU execute nodes
+        [[[parameter ComputeMachineType1]]]
+        Label = Compute1 VM Type
+        Description = The VM type for Compute execute nodes
         ParameterType = Cloud.MachineType
-        DefaultValue = Standard_NC24rs_v2
-
-        [[[parameter GPUMachineType2]]]
-        Label = GPU2 VM Type
-        Description = The VM type for GPU execute nodes
-        ParameterType = Cloud.MachineType
-        DefaultValue = Standard_NC24rs_v3
+        DefaultValue = Standard_D32a_v4
 
     [[parameters Auto-Scaling]]
     Description = "The cluster can autoscale to the workload, adding execute hosts as jobs are queued. To enable this check the box below and choose the initial and maximum core counts for the cluster"
@@ -246,16 +203,8 @@ Order = 10
         Config.MinValue = 0
         Config.IntegerOnly = true
 
-        [[[parameter MaxGPU1CoreCount]]]
-        Label = GPU1 Max Cores
-        Description = The total number of GPU execute cores to start
-        DefaultValue = 240
-        Config.Plugin = pico.form.NumberTextBox
-        Config.MinValue = 0
-        Config.IntegerOnly = true
-
-        [[[parameter MaxGPU2CoreCount]]]
-        Label = GPU1 Max Cores
+        [[[parameter MaxCompute1CoreCount]]]
+        Label = Compute1 Max Cores
         Description = The total number of GPU execute cores to start
         DefaultValue = 240
         Config.Plugin = pico.form.NumberTextBox
@@ -280,14 +229,8 @@ Order = 10
         Widget.Plugin = pico.form.BooleanCheckBox
         Widget.Label = Use low priority instances for all execute hosts
 
-        [[[parameter GPU1LowPri]]]
-        Label = GPU1 Low Priority
-        DefaultValue = true
-        Widget.Plugin = pico.form.BooleanCheckBox
-        Widget.Label = Use low priority instances for all execute hosts
-
-        [[[parameter GPU2LowPri]]]
-        Label = GPU2 Low Priority
+        [[[parameter Compute1LowPri]]]
+        Label = Compute1 Low Priority
         DefaultValue = true
         Widget.Plugin = pico.form.BooleanCheckBox
         Widget.Label = Use low priority instances for all execute hosts
@@ -319,37 +262,31 @@ Order = 20
         Label = Master Node OS
         ParameterType = Cloud.Image
         Config.OS = linux
-        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+        DefaultValue = OpenLogic:CentOS-HPC:7.7:latest
 
         [[[parameter HPC1ImageName]]]
         Label = HPC Node Type1 OS
         ParameterType = Cloud.Image
         Config.OS = linux
-        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+        DefaultValue = OpenLogic:CentOS-HPC:7.7:latest
 
         [[[parameter HPC2ImageName]]]
         Label = HPC Node Type2 OS
         ParameterType = Cloud.Image
         Config.OS = linux
-        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+        DefaultValue = OpenLogic:CentOS-HPC:7.7:latest
 
         [[[parameter HPC3ImageName]]]
         Label = HPC Node Type3 OS
         ParameterType = Cloud.Image
         Config.OS = linux
-        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+        DefaultValue = OpenLogic:CentOS-HPC:7.7:latest
 
-        [[[parameter GPU1ImageName]]]
-        Label = GPU Node Type1 OS
+        [[[parameter Compute1ImageName]]]
+        Label = Compute Node Type1 OS
         ParameterType = Cloud.Image
         Config.OS = linux
-        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
-
-        [[[parameter GPU2ImageName]]]
-        Label = GPU Node Type2 OS
-        ParameterType = Cloud.Image
-        Config.OS = linux
-        DefaultValue = OpenLogic:CentOS-HPC:7.6:latest
+        DefaultValue = OpenLogic:CentOS-HPC:7.7:latest
 
         [[[parameter MasterClusterInitSpecs]]]
         Label = Master Cluster-Init
