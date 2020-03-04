@@ -21,6 +21,7 @@ Autoscale = $Autoscale
         cyclecloud.exports.sched.disabled = true
         cyclecloud.exports.shared.samba.enabled = false
         cyclecloud.exports.defaults.samba.enabled = false
+        pbspro.version = 18.1.4-0
 
         [[[configuration cyclecloud.mounts.anf_shared]]]
         type = nfs
