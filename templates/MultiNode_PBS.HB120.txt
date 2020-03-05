@@ -85,7 +85,7 @@ Autoscale = $Autoscale
     #-- HPC Machine Type 3 HB120rs
     [[nodearray HB120]]
     ImageName = $HPC3ImageName
-    MachineType = Standard_HB120rs
+    MachineType = Standard_HB120rs_v2
     MaxCoreCount = $MaxHPC3CoreCount
     Azure.MaxScalesetSize = 300
 
