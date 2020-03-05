@@ -1,4 +1,4 @@
-# cyclecloud-colossus
+# cyclecloud-mclaren
 Multinode CycleCloud cluster templates
 
 These templates are functioning examples for multi-node heterogeneous clusters (eg: mixed Intel/AMD/NVIDIA node types), which allow you to submit jobs to different queues ("nodearrays" in Cycle language), and have Cyclecloud autoscale the nodearrays for you. 
@@ -31,3 +31,5 @@ Use "--partition=HC44" or "--partition=HB60"
 module load mpi/impi_2018.4.274
 mpirun -np 2 -ppn 44 -genv I_MPI_FABRICS=shm:ofa -genv I_MPI_FALLBACK_DEVICE=0 IMB-MPI1
 ```
+
+(cloned from: https://github.com/mkiernan/cyclecloud-colossus)
