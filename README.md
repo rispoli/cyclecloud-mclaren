@@ -30,4 +30,4 @@ Use "--partition=HC44" or "--partition=HB60"
 #SBATCH --partition=HC44
 module load mpi/impi_2018.4.274
 mpirun -np 2 -ppn 44 -genv I_MPI_FABRICS=shm:ofa -genv I_MPI_FALLBACK_DEVICE=0 IMB-MPI1
-```fo
+```
