@@ -88,6 +88,7 @@ Autoscale = $Autoscale
     MachineType = Standard_HB120rs_v2
     MaxCoreCount = $MaxHPC3CoreCount
     Azure.MaxScalesetSize = 300
+    Region = southcentralus
 
     Interruptible = $HPC3LowPri
     AdditionalClusterInitSpecs = $ExecuteClusterInitSpecs
